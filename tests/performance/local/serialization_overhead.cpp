@@ -7,6 +7,7 @@
 #include <hpx/include/actions.hpp>
 #include <hpx/include/iostreams.hpp>
 #include <hpx/include/serialization.hpp>
+#include <hpx/runtime/serialization/detail/future_await_container.hpp>
 #include <hpx/util/high_resolution_timer.hpp>
 
 #include <boost/format.hpp>
@@ -25,7 +26,7 @@ int test_function(hpx::serialization::serialize_buffer<double> const& b)
 }
 HPX_PLAIN_ACTION(test_function, test_action)
 
-std::size_t get_archive_size(hpx::parcelset::parcel const& p,
+std::size_t get_archive_size(std::vector<hpx::parcelset::parcel> const& p,
     boost::uint32_t flags,
     std::vector<hpx::serialization::serialization_chunk>* chunks)
 {
@@ -37,8 +38,113 @@ std::size_t get_archive_size(hpx::parcelset::parcel const& p,
     return gather_size.size();
 }
 
+void future_await(std::vector<hpx::parcelset::parcel> const& p)
+{
+    hpx::serialization::detail::future_await_container future_await;
+    hpx::serialization::output_archive archive(future_await);
+    archive << p;
+}
+
+struct timing
+{
+    timing()
+      : average_total(0.0)
+      , average_input(0.0)
+      , average_output(0.0)
+      , average_size(0.0)
+      , average_future_await(0.0)
+      , iterations(0)
+    {}
+
+    timing& operator+=(timing const& other)
+    {
+        average_total += other.average_total;
+        average_input += other.average_input;
+        average_output += other.average_output;
+        average_size += other.average_size;
+        average_future_await += other.average_future_await;
+        iterations += other.iterations;
+
+        return *this;
+    }
+
+    void report(std::size_t data_size, std::size_t verbose)
+    {
+        double const scale = 1e9;
+
+        double total = (average_total / iterations) * scale;
+        double input = (average_input / iterations) * scale;
+        double output = (average_output / iterations) * scale;
+        double size = (average_size / iterations) * scale;
+        double future_await = (average_future_await / iterations) * scale;
+
+        double input_perc = (average_input / average_total) * 100.0;
+        double output_perc = (average_output / average_total) * 100.0;
+        double size_perc = (average_size / average_total) * 100.0;
+        double future_await_perc = (average_future_await / average_total) * 100.0;
+
+        if(verbose == 1)
+        {
+            hpx::cout
+                << "data size,"
+                << "iterations,"
+                << "total time [ns],"
+                << "future await time [ns],"
+                << "size calculation time [ns],"
+                << "output archive time [ns],"
+                << "input archive time [ns]\n"
+                << "future await [%],"
+                << "size calculation [%],"
+                << "output archive [%],"
+                << "input archive [%]\n"
+                << hpx::flush;
+
+
+        }
+
+        if(verbose < 2)
+        {
+            hpx::cout
+                << data_size * sizeof(double) << ","
+                << iterations << ","
+                << total << ","
+                << future_await << ","
+                << size << ","
+                << output << ","
+                << input << ","
+                << future_await_perc << ","
+                << size_perc << ","
+                << output_perc << ","
+                << input_perc
+                << "\n" << hpx::flush;
+        }
+
+        if(verbose == 2)
+        {
+            hpx::cout << "Timings reported in nano seconds.\n"
+                << "The test ran for 5 seconds and performed a total of "
+                << iterations << " iterations.\n"
+                << "Data size is " << data_size * sizeof(double) << " byte.\n"
+                << "Total time per parcel (input and output): " << total << "\n"
+                << " Future await calculation: " << future_await << " (" << future_await_perc << "%)\n"
+                << " Size calculation: " << size << " (" << size_perc << "%)\n"
+                << " Output archive time: " << output << " (" << output_perc << "%)\n"
+                << " Input archive time: " << input << " (" << input_perc << "%)\n"
+                << hpx::flush;
+            return;
+        }
+    }
+
+    double average_total;
+    double average_input;
+    double average_output;
+    double average_size;
+    double average_future_await;
+    std::size_t iterations;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
-double benchmark_serialization(std::size_t data_size, std::size_t iterations,
+timing benchmark_serialization(std::size_t data_size, std::size_t batch,
     bool continuation, bool zerocopy)
 {
     hpx::naming::id_type const here = hpx::find_here();
@@ -89,89 +195,114 @@ double benchmark_serialization(std::size_t data_size, std::size_t iterations,
     hpx::serialization::serialize_buffer<double> buffer(data.data(), data.size(),
         hpx::serialization::serialize_buffer<double>::reference);
 
-    // create a parcel with/without continuation
-    hpx::parcelset::parcel outp;
-    if (continuation) {
-        outp = hpx::parcelset::parcel(here, addr,
-            hpx::actions::typed_continuation<int>(here),
-            test_action(), hpx::threads::thread_priority_normal, buffer
-            );
+    // create parcels with/without continuation
+    std::vector<hpx::parcelset::parcel> outp;
+    outp.reserve(batch);
+    for(std::size_t i = 0; i < batch; ++i)
+    {
+        if (continuation) {
+            outp.push_back(hpx::parcelset::parcel(here, addr,
+                hpx::actions::typed_continuation<int>(here),
+                test_action(), hpx::threads::thread_priority_normal, buffer
+                ));
+        }
+        else {
+            outp.push_back(hpx::parcelset::parcel(here, addr,
+                test_action(), hpx::threads::thread_priority_normal, buffer));
+        }
+        outp.back().parcel_id() = hpx::parcelset::parcel::generate_unique_id();
+        outp.back().set_source_id(here);
     }
-    else {
-        outp = hpx::parcelset::parcel(here, addr,
-            test_action(), hpx::threads::thread_priority_normal, buffer);
-    }
-
-    outp.parcel_id() = hpx::parcelset::parcel::generate_unique_id();
-    outp.set_source_id(here);
 
     std::vector<hpx::serialization::serialization_chunk>* chunks = nullptr;
     if (zerocopy)
         chunks = new std::vector<hpx::serialization::serialization_chunk>();
 
-    boost::uint32_t dest_locality_id = outp.destination_locality_id();
+    boost::uint32_t dest_locality_id = outp.back().destination_locality_id();
     hpx::util::high_resolution_timer t;
 
-    for (std::size_t i = 0; i != iterations; ++i)
+    timing timings;
+
+    // Run for 5 seconds
+    while (t.elapsed() < 5.0)
     {
+        double start = 0.0;
+
+        start = t.now();
+        future_await(outp);
+        timings.average_future_await += t.now() - start;
+
+        start = t.now();
         std::size_t arg_size = get_archive_size(outp, out_archive_flags, chunks);
         std::vector<char> out_buffer;
+        timings.average_size += t.now() - start;
 
         out_buffer.resize(arg_size + HPX_PARCEL_SERIALIZATION_OVERHEAD);
 
         {
+            start = t.now();
             // create an output archive and serialize the parcel
             hpx::serialization::output_archive archive(
                 out_buffer, out_archive_flags, dest_locality_id, chunks);
-            archive << outp;
+            archive << batch;
+            for(hpx::parcelset::parcel& p: outp)
+            {
+                archive << p;
+            }
+            //archive << outp;
             arg_size = archive.bytes_written();
+            timings.average_output += t.now() - start;
         }
 
-        hpx::parcelset::parcel inp;
-
         {
+            start = t.now();
             // create an input archive and deserialize the parcel
             hpx::serialization::input_archive archive(
                 out_buffer, arg_size, chunks);
 
-            archive >> inp;
+            std::size_t batch_size = 0;
+            archive >> batch_size;
+            for (std::size_t i = 0; i < batch_size; ++i)
+            {
+                hpx::parcelset::parcel p;
+                archive >> p;
+            }
+            timings.average_input += t.now() - start;
         }
 
         if (chunks)
             chunks->clear();
+        timings.iterations += batch;
     }
+    timings.average_total = t.elapsed();
 
-    return t.elapsed();
+    return timings;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 std::size_t data_size = 1;
-std::size_t iterations = 1000;
 std::size_t concurrency = 1;
+std::size_t batch = 1;
+std::size_t verbose = 2;
 
 int hpx_main(boost::program_options::variables_map& vm)
 {
-    bool print_header = vm.count("no-header") == 0;
     bool continuation = vm.count("continuation") != 0;
     bool zerocopy = vm.count("zerocopy") != 0;
 
-    std::vector<hpx::future<double> > timings;
+    std::vector<hpx::future<timing> > timings;
     for (std::size_t i = 0; i != concurrency; ++i)
     {
         timings.push_back(hpx::async(
-            &benchmark_serialization, data_size, iterations,
+            &benchmark_serialization, data_size, batch,
             continuation, zerocopy));
     }
 
-    double overall_time = 0;
+    timing overall_time;
     for (std::size_t i = 0; i != concurrency; ++i)
         overall_time += timings[i].get();
 
-    if (print_header)
-        hpx::cout << "datasize,testcount,average_time[s]\n" << hpx::flush;
-
-    hpx::cout << (boost::format("%d,%d,%f\n") %
-        data_size % iterations % (overall_time / concurrency)) << hpx::flush;
+    overall_time.report(data_size, verbose);
 
     return hpx::finalize();
 }
@@ -191,9 +322,9 @@ int main(int argc, char* argv[])
         , boost::program_options::value<std::size_t>(&data_size)->default_value(1)
         , "size of data buffer to serialize in bytes (default: 1)")
 
-        ( "iterations"
-        , boost::program_options::value<std::size_t>(&iterations)->default_value(1000)
-        , "number of iterations while measuring serialization overhead (default: 1000)")
+        ( "batch"
+        , boost::program_options::value<std::size_t>(&batch)->default_value(1)
+        , "number of parcels to batch in one call to serialization (default: 1)")
 
         ( "continuation"
         , "add a continuation to each created parcel")
@@ -201,8 +332,10 @@ int main(int argc, char* argv[])
         ( "zerocopy"
         , "use zero copy serialization of bitwise copyable arguments")
 
-        ( "no-header"
-        , "do not print out the csv header row")
+        ( "verbose"
+        , boost::program_options::value<std::size_t>(&verbose)->default_value(2)
+        , "Verbosity of the output report.\n"
+          "0: print cvs, 1: print cvs with header, 2: human readable")
         ;
 
     return hpx::init(cmdline, argc, argv);
