@@ -145,32 +145,36 @@ namespace hpx { namespace parcelset
             data()
               : start_time_(0),
                 creation_time_(util::high_resolution_timer::now()),
-                has_source_id_(false)
+            {}
+
+            explicit data(naming::gid_type const& dests)
+              : start_time_(0),
+                creation_time_(util::high_resolution_timer::now()),
             {}
 
             data(data && rhs)
               : parcel_id_(rhs.parcel_id_),
+                source_id_(rhs.source_id_),
                 start_time_(rhs.start_time_),
                 creation_time_(rhs.creation_time_),
-                has_source_id_(rhs.has_source_id_)
             {
                 rhs.parcel_id_ = naming::invalid_gid;
+                rhs.source_id_ = naming::invalid_gid;
                 rhs.start_time_ = 0;
                 rhs.creation_time_ = 0;
-                rhs.has_source_id_ = false;
             }
 
             data& operator=(data && rhs)
             {
                 parcel_id_ = rhs.parcel_id_;
+                source_id_ = rhs.source_id_;
                 start_time_ = rhs.start_time_;
                 creation_time_ = rhs.creation_time_;
-                has_source_id_ = rhs.has_source_id_;
 
                 rhs.parcel_id_ = naming::invalid_gid;
+                rhs.source_id_ = naming::invalid_gid;
                 rhs.start_time_ = 0;
                 rhs.creation_time_ = 0;
-                rhs.has_source_id_ = false;
                 return *this;
             }
 
@@ -178,16 +182,15 @@ namespace hpx { namespace parcelset
             void serialize(Archive &ar, unsigned)
             {
                 ar & parcel_id_;
+                ar & source_id_;
                 ar & start_time_;
                 ar & creation_time_;
-                ar & has_source_id_;
             }
 
             naming::gid_type parcel_id_;
+            naming::gid_type source_id_;
             double start_time_;
             double creation_time_;
-
-            bool has_source_id_;
         };
 
         parcel() {}
@@ -304,7 +307,6 @@ namespace hpx { namespace parcelset
 
         parcel(parcel && other)
           : data_(std::move(other.data_)),
-            source_id_(std::move(other.source_id_)),
             dests_(std::move(other.dests_)),
             addrs_(std::move(other.addrs_)),
             cont_(std::move(other.cont_)),
@@ -316,7 +318,6 @@ namespace hpx { namespace parcelset
         parcel &operator=(parcel && other)
         {
             data_ = std::move(other.data_);
-            source_id_ = std::move(other.source_id_);
             dests_ = std::move(other.dests_);
             addrs_ = std::move(other.addrs_);
             cont_ = std::move(other.cont_);
@@ -331,7 +332,6 @@ namespace hpx { namespace parcelset
         void reset()
         {
             data_ = data();
-            source_id_ = hpx::naming::invalid_id;
 #if defined(HPX_SUPPORT_MULTIPLE_PARCEL_DESTINATIONS)
             dests_.clear();
             addrs_.clear();
@@ -358,17 +358,16 @@ namespace hpx { namespace parcelset
             cont_ = std::move(cont);
         }
 
-        naming::id_type const& source_id() const
+        naming::gid_type const& source_id() const
         {
-            return source_id_;
+            return data_.source_id_;
         }
 
         void set_source_id(naming::id_type const & source_id)
         {
             if (source_id != naming::invalid_id)
             {
-                source_id_ = source_id;
-                data_.has_source_id_ = true;
+                data_.source_id_ = source_id.get_gid();
             }
         }
 
@@ -479,7 +478,6 @@ namespace hpx { namespace parcelset
         void serialize(serialization::output_archive & ar, unsigned);
 
         data data_;
-        naming::id_type source_id_;
 
 #if defined(HPX_SUPPORT_MULTIPLE_PARCEL_DESTINATIONS)
         std::vector<naming::id_type> dests_;

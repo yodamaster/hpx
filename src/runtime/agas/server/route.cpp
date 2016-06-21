@@ -80,7 +80,8 @@ namespace hpx { namespace agas { namespace server
             }
         }
 
-        naming::id_type source = p.source_id();
+        naming::id_type source
+            = naming::id_type(p.source_id(), naming::id_type::unmanaged);
 
         // either send the parcel on its way or execute actions locally
         if (addrs[0].locality_ == get_locality())

@@ -36,14 +36,6 @@ namespace hpx { namespace parcelset
     void parcel::serialize(serialization::input_archive & ar, unsigned)
     {
         ar & data_;
-        if(data_.has_source_id_)
-        {
-            ar & source_id_;
-        }
-        else
-        {
-            source_id_ = naming::invalid_id;
-        }
         ar & dests_;
         ar & addrs_;
         ar & cont_;
@@ -53,10 +45,6 @@ namespace hpx { namespace parcelset
     void parcel::serialize(serialization::output_archive & ar, unsigned)
     {
         ar & data_;
-        if(data_.has_source_id_)
-        {
-            ar & source_id_;
-        }
         ar & dests_;
         ar & addrs_;
         ar & cont_;
