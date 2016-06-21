@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <map>
 
 namespace hpx { namespace serialization
 {

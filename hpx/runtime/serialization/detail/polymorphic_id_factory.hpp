@@ -20,11 +20,48 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
 #include <hpx/config/warnings_prefix.hpp>
+
+namespace hpx { namespace serialization { namespace detail {
+    struct typename_registry
+    {
+        typedef void* (*ctor_type)();
+
+        HPX_STATIC_CONSTEXPR boost::uint32_t invalid_id = ~0u;
+
+        typename_registry()
+          : ctor_(nullptr)
+          , id_(invalid_id)
+        {}
+
+        explicit typename_registry(ctor_type ctor)
+          : ctor_(ctor)
+          , id_(invalid_id)
+        {}
+
+        explicit typename_registry(boost::uint32_t id)
+          : ctor_(nullptr)
+          , id_(id)
+        {}
+
+        typename_registry(ctor_type ctor, boost::uint32_t id)
+          : ctor_(ctor)
+          , id_(id)
+        {}
+
+        bool operator==(typename_registry const& other)
+        {
+            return ctor_ == other.ctor_ && id_ == other.id_;
+        }
+
+        ctor_type ctor_;
+        boost::uint32_t id_;
+    };
+}}}
 
 namespace hpx { namespace serialization {
 
@@ -35,57 +72,48 @@ namespace hpx { namespace serialization {
             HPX_NON_COPYABLE(id_registry);
 
         public:
-            typedef void* (*ctor_t) ();
-            typedef std::map<std::string, ctor_t> typename_to_ctor_t;
-            typedef std::map<std::string, boost::uint32_t> typename_to_id_t;
-            typedef std::vector<ctor_t> cache_t;
+            typedef typename_registry::ctor_type ctor_type;
+            typedef std::unordered_map<std::string, typename_registry> typename_map_type;
+            typedef std::vector<ctor_type> cache_type;
 
             HPX_STATIC_CONSTEXPR boost::uint32_t invalid_id = ~0u;
 
             void register_factory_function(const std::string& type_name,
-                ctor_t ctor)
+                ctor_type ctor)
             {
-#if !defined(HPX_GCC_VERSION) || HPX_GCC_VERSION >= 408000
-                typename_to_ctor.emplace(type_name, ctor);
-#else
-                typename_to_ctor.insert(
-                    typename_to_ctor_t::value_type(type_name, ctor)
-                );
-#endif
+                typename_registry& entry = typename_map_[type_name];
+                entry.ctor_ = ctor;
+
                 // populate cache
-                typename_to_id_t::const_iterator it =
-                    typename_to_id.find(type_name);
-                if (it != typename_to_id.end())
-                    cache_id(it->second, ctor);
+                if(entry.id_ != typename_registry::invalid_id)
+                {
+                    cache_id(entry.id_, entry.ctor_);
+                }
             }
 
             void register_typename(const std::string& type_name,
                 boost::uint32_t id)
             {
-#if !defined(HPX_GCC_VERSION) || HPX_GCC_VERSION >= 408000
-                typename_to_id.emplace(type_name, id);
-#else
-                typename_to_id.insert(
-                    typename_to_id_t::value_type(type_name, id)
-                );
-#endif
+                typename_registry& entry = typename_map_[type_name];
+                entry.id_ = id;
+
                 // populate cache
-                typename_to_ctor_t::const_iterator it =
-                    typename_to_ctor.find(type_name);
-                if (it != typename_to_ctor.end())
-                    cache_id(id, it->second);
+                if(entry.ctor_ != nullptr)
+                {
+                    cache_id(entry.id_, entry.ctor_);
+                }
 
                 if (id > max_id) max_id = id;
             }
 
             boost::uint32_t try_get_id(const std::string& type_name) const
             {
-                typename_to_id_t::const_iterator it =
-                    typename_to_id.find(type_name);
-                if (it == typename_to_id.end())
-                    return invalid_id;
+                typename_map_type::const_iterator it =
+                    typename_map_.find(type_name);
+                if (it == typename_map_.end())
+                    return typename_registry::invalid_id;
 
-                return it->second;
+                return it->second.id_;
             }
 
             boost::uint32_t get_max_registered_id() const
@@ -95,13 +123,12 @@ namespace hpx { namespace serialization {
 
             std::vector<std::string> get_unassigned_typenames() const
             {
-                typedef typename_to_ctor_t::value_type value_type;
+                typedef typename_map_type::value_type value_type;
 
                 std::vector<std::string> result;
 
-                // O(Nlog(M)) ?
-                for (const value_type& v : typename_to_ctor)
-                    if (!typename_to_id.count(v.first))
+                for (const value_type& v : typename_map_)
+                    if (v.second.id_ == typename_registry::invalid_id)
                         result.push_back(v.first);
 
                 return result;
@@ -115,7 +142,7 @@ namespace hpx { namespace serialization {
             friend struct ::hpx::util::static_<id_registry>;
             friend class polymorphic_id_factory;
 
-            void cache_id(boost::uint32_t id, ctor_t ctor)
+            void cache_id(boost::uint32_t id, ctor_type ctor)
             {
                 if (id >= cache.size()) //-V104
                     cache.resize(id + 1, nullptr); //-V106
@@ -123,32 +150,29 @@ namespace hpx { namespace serialization {
             }
 
             boost::uint32_t max_id;
-            typename_to_ctor_t typename_to_ctor;
-            typename_to_id_t typename_to_id;
-            cache_t cache;
+            typename_map_type typename_map_;
+            cache_type cache;
         };
 
         class polymorphic_id_factory
         {
             HPX_NON_COPYABLE(polymorphic_id_factory);
 
-            typedef id_registry::ctor_t ctor_t;
-            typedef id_registry::typename_to_ctor_t typename_to_ctor_t;
-            typedef id_registry::typename_to_id_t typename_to_id_t;
-            typedef id_registry::cache_t cache_t;
+            typedef typename_registry::ctor_type ctor_type;
+            typedef id_registry::cache_type cache_type;
 
         public:
             template <class T>
             static T* create(boost::uint32_t id)
             {
-                const cache_t& vec = id_registry::instance().cache;
+                const cache_type& vec = id_registry::instance().cache;
 
                 if (id > vec.size()) //-V104
                     HPX_THROW_EXCEPTION(serialization_error
                       , "polymorphic_id_factory::create"
                       , "Unknown type descriptor " + std::to_string(id));
 
-                ctor_t ctor = vec[id]; //-V108
+                ctor_type ctor = vec[id]; //-V108
                 HPX_ASSERT(ctor != nullptr);
                 return static_cast<T*>(ctor());
             }
