@@ -13,6 +13,8 @@
 
 #include <boost/exception_ptr.hpp>
 
+HPX_REGISTER_TYPED_CONTINUATION(void, hpx_void_typed_continuation);
+
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx
 {
@@ -220,6 +222,4 @@ namespace hpx { namespace actions
         set_lco_error(gid_, this->get_addr(), std::move(e));
     }
 }}
-
-HPX_REGISTER_TYPED_CONTINUATION(void, hpx_void_typed_continuation);
 

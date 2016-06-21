@@ -202,6 +202,8 @@ namespace hpx
     }
 }
 
+HPX_TRAITS_SERIALIZED_WITH_ID(hpx::actions::continuation)
+
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace actions
 {
@@ -578,6 +580,7 @@ namespace hpx { namespace actions
             > function_type;
 
     public:
+        typedef void serialized_with_id;
 
         typedef Result result_type;
 
@@ -821,6 +824,7 @@ namespace hpx { namespace actions
 
     public:
         typedef void result_type;
+        typedef void serialized_with_id;
 
         typed_continuation()
         {}
@@ -1033,7 +1037,6 @@ namespace hpx { namespace traits
       : std::true_type
     {};
 }}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 #define HPX_DECLARE_GET_CONTINUATION_NAME_(continuation, name)                \
@@ -1069,6 +1072,8 @@ namespace hpx { namespace traits
     HPX_DEFINE_GET_CONTINUATION_NAME_(                                        \
         hpx::actions::typed_continuation<Result>, Name)                       \
 /**/
+
+HPX_REGISTER_TYPED_CONTINUATION_DECLARATION(void, hpx_void_typed_continuation)
 
 #include <hpx/config/warnings_suffix.hpp>
 
