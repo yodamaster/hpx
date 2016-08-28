@@ -28,10 +28,11 @@
 #include <hpx/parallel/util/detail/handle_local_exceptions.hpp>
 #include <hpx/parallel/util/projection_identity.hpp>
 
-#include <boost/exception_ptr.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <algorithm>
 #include <cstddef>
+#include <exception>
 #include <functional>
 #include <iterator>
 #include <list>
@@ -59,15 +60,15 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v1)
                 return std::move(f);
             }
 
-            static hpx::future<R> call(boost::exception_ptr const& e)
+            static hpx::future<R> call(std::exception_ptr const& e)
             {
                 try {
-                    boost::rethrow_exception(e);
+                    std::rethrow_exception(e);
                 }
                 catch (std::bad_alloc const&) {
                     // rethrow bad_alloc
                     return hpx::make_exceptional_future<R>(
-                        boost::current_exception());
+                        std::current_exception());
                 }
                 catch (...) {
                     // package up everything else as an exception_list
@@ -87,7 +88,7 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v1)
             }
 
             HPX_ATTRIBUTE_NORETURN
-            static hpx::future<R> call(boost::exception_ptr const&)
+            static hpx::future<R> call(std::exception_ptr const&)
             {
                 hpx::terminate();
             }
@@ -209,7 +210,7 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v1)
                 {
                     if (left.has_exception() || right.has_exception())
                     {
-                        std::list<boost::exception_ptr> errors;
+                        std::list<std::exception_ptr> errors;
                         if (left.has_exception())
                             errors.push_back(left.get_exception_ptr());
                         if (right.has_exception())
@@ -264,7 +265,7 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v1)
             }
             catch (...) {
                 return detail::handle_sort_exception<ExPolicy, RandomIt>::call(
-                    boost::current_exception());
+                    std::current_exception());
             }
 
             if (result.has_exception())

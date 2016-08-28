@@ -33,6 +33,7 @@
 #endif
 
 #include <boost/atomic.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <boost/context/all.hpp>
 

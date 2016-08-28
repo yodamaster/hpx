@@ -50,7 +50,7 @@ namespace lcos {
                 }
                 catch (...)
                 {
-                    this->set_exception(boost::current_exception());
+                    this->set_exception(std::current_exception());
                 }
             }
 

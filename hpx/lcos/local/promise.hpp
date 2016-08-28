@@ -13,10 +13,10 @@
 #include <hpx/traits/future_access.hpp>
 #include <hpx/util/unused.hpp>
 
-#include <boost/exception_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/utility/swap.hpp>
 
+#include <exception>
 #include <utility>
 
 namespace hpx { namespace lcos { namespace local
@@ -265,7 +265,7 @@ namespace hpx { namespace lcos { namespace local
         //   - promise_already_satisfied if its shared state already has a
         //     stored value or exception.
         //   - no_state if *this has no shared state.
-        void set_exception(boost::exception_ptr const& e, error_code& ec = throws)
+        void set_exception(std::exception_ptr const& e, error_code& ec = throws)
         {
             base_type::set_exception(e, ec);
         }
@@ -355,7 +355,7 @@ namespace hpx { namespace lcos { namespace local
         //   - promise_already_satisfied if its shared state already has a
         //     stored value or exception.
         //   - no_state if *this has no shared state.
-        void set_exception(boost::exception_ptr const& e, error_code& ec = throws)
+        void set_exception(std::exception_ptr const& e, error_code& ec = throws)
         {
             base_type::set_exception(e, ec);
         }
@@ -447,7 +447,7 @@ namespace hpx { namespace lcos { namespace local
         //   - promise_already_satisfied if its shared state already has a
         //     stored value or exception.
         //   - no_state if *this has no shared state.
-        void set_exception(boost::exception_ptr const& e, error_code& ec = throws)
+        void set_exception(std::exception_ptr const& e, error_code& ec = throws)
         {
             base_type::set_exception(e, ec);
         }
@@ -582,7 +582,7 @@ namespace std { namespace experimental
                     std::rethrow_exception(e);
                 }
                 catch (...) {
-                    this->base_type::set_exception(boost::current_exception());
+                    this->base_type::set_exception(std::current_exception());
                 }
             }
 

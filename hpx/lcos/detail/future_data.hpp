@@ -24,11 +24,11 @@
 #include <hpx/util/unique_function.hpp>
 #include <hpx/util/unused.hpp>
 
-#include <boost/exception_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 
 #include <chrono>
 #include <cstddef>
+#include <exception>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -150,7 +150,7 @@ namespace detail
     struct future_data_storage
     {
         typedef typename future_data_result<R>::type value_type;
-        typedef boost::exception_ptr error_type;
+        typedef std::exception_ptr error_type;
 
         // determine the required alignment, define aligned storage of proper
         // size
@@ -316,12 +316,12 @@ namespace detail
             // and promise::set_exception).
             if (state_ == exception)
             {
-                boost::exception_ptr* exception_ptr =
-                    reinterpret_cast<boost::exception_ptr*>(&storage_);
+                std::exception_ptr* exception_ptr =
+                    reinterpret_cast<std::exception_ptr*>(&storage_);
                 // an error has been reported in the meantime, throw or set
                 // the error code
                 if (&ec == &throws) {
-                    boost::rethrow_exception(*exception_ptr);
+                    std::rethrow_exception(*exception_ptr);
                     // never reached
                 }
                 else {
@@ -334,13 +334,13 @@ namespace detail
 
         // deferred execution of a given continuation
         bool run_on_completed(completed_callback_type && on_completed,
-            boost::exception_ptr& ptr)
+            std::exception_ptr& ptr)
         {
             try {
                 on_completed();
             }
             catch (...) {
-                ptr = boost::current_exception();
+                ptr = std::current_exception();
                 return false;
             }
             return true;
@@ -380,7 +380,7 @@ namespace detail
                 boost::intrusive_ptr<future_data> this_(this);
 
                 error_code ec(lightweight);
-                boost::exception_ptr ptr;
+                std::exception_ptr ptr;
                 if (!run_on_completed_on_new_thread(
                         util::deferred_call(&future_data::run_on_completed,
                             std::move(this_), std::move(on_completed),
@@ -395,7 +395,7 @@ namespace detail
 
                     // re-throw exception in this context
                     HPX_ASSERT(ptr);        // exception should have been set
-                    boost::rethrow_exception(ptr);
+                    std::rethrow_exception(ptr);
                 }
             }
         }
@@ -456,9 +456,9 @@ namespace detail
             on_completed = std::move(this->on_completed_);
 
             // set the data
-            boost::exception_ptr* exception_ptr =
-                reinterpret_cast<boost::exception_ptr*>(&storage_);
-            ::new ((void*)exception_ptr) boost::exception_ptr(
+            std::exception_ptr* exception_ptr =
+                reinterpret_cast<std::exception_ptr*>(&storage_);
+            ::new ((void*)exception_ptr) std::exception_ptr(
                 std::forward<Target>(data));
             state_ = exception;
 
@@ -492,7 +492,7 @@ namespace detail
             }
             catch (...) {
                 // store the error instead
-                return set_exception(boost::current_exception());
+                return set_exception(std::current_exception());
             }
         }
 
@@ -504,7 +504,7 @@ namespace detail
             }
             catch (...) {
                 // store the error code
-                set_exception(boost::current_exception());
+                set_exception(std::current_exception());
             }
         }
 
@@ -526,8 +526,8 @@ namespace detail
             }
             case exception:
             {
-                boost::exception_ptr* exception_ptr =
-                    reinterpret_cast<boost::exception_ptr*>(&storage_);
+                std::exception_ptr* exception_ptr =
+                    reinterpret_cast<std::exception_ptr*>(&storage_);
                 exception_ptr->~exception_ptr();
                 break;
             }
@@ -798,7 +798,7 @@ namespace detail
         }
 
         void set_exception(
-            boost::exception_ptr const& e, error_code& ec = throws)
+            std::exception_ptr const& e, error_code& ec = throws)
         {
             this->future_data<Result>::set_exception(e, ec);
         }
@@ -902,7 +902,7 @@ namespace detail
             }
             catch (...) {
                 this->started_ = true;
-                this->set_exception(boost::current_exception());
+                this->set_exception(std::current_exception());
                 throw;
             }
         }

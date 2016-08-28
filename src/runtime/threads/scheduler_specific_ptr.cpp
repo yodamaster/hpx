@@ -10,8 +10,9 @@
 #include <hpx/runtime/threads/coroutines/detail/tss.hpp>
 #include <hpx/runtime/threads/scheduler_specific_ptr.hpp>
 
-#include <boost/exception_ptr.hpp>
+#include <boost/throw_exception.hpp>
 
+#include <exception>
 #include <memory>
 
 namespace hpx { namespace threads { namespace detail

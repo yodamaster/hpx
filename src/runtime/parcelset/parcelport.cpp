@@ -111,7 +111,7 @@ namespace hpx { namespace parcelset
                 act->get_thread_function(0)(threads::wait_signaled);
             }
             catch (...) {
-                hpx::report_error(boost::current_exception());
+                hpx::report_error(std::current_exception());
             }
         }
     }

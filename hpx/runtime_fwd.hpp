@@ -30,10 +30,9 @@
 #include <hpx/util/function.hpp>
 #include <hpx/util_fwd.hpp>
 
-#include <boost/exception_ptr.hpp>
-
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <string>
 
 namespace hpx
@@ -57,10 +56,10 @@ namespace hpx
 
     /// The function report_error reports the given exception to the console
     HPX_API_EXPORT void report_error(std::size_t num_thread,
-        boost::exception_ptr const& e);
+        std::exception_ptr const& e);
 
     /// The function report_error reports the given exception to the console
-    HPX_API_EXPORT void report_error(boost::exception_ptr const& e);
+    HPX_API_EXPORT void report_error(std::exception_ptr const& e);
 
     /// Register a function to be called during system shutdown
     HPX_API_EXPORT bool register_on_exit(util::function_nonser<void()> const&);

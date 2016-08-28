@@ -12,8 +12,9 @@
 #include <hpx/hpx_finalize.hpp>
 #include <hpx/parallel/execution_policy.hpp>
 
-#include <boost/exception_ptr.hpp>
+#include <boost/throw_exception.hpp>
 
+#include <exception>
 #include <list>
 #include <utility>
 #include <vector>
@@ -27,10 +28,10 @@ namespace hpx { namespace parallel { namespace util { namespace detail
     {
         ///////////////////////////////////////////////////////////////////////
         // std::bad_alloc has to be handled separately
-        HPX_ATTRIBUTE_NORETURN static void call(boost::exception_ptr const& e)
+        HPX_ATTRIBUTE_NORETURN static void call(std::exception_ptr const& e)
         {
             try {
-                boost::rethrow_exception(e);
+                std::rethrow_exception(e);
             }
             catch (std::bad_alloc const& ba) {
                 boost::throw_exception(ba);
@@ -40,11 +41,11 @@ namespace hpx { namespace parallel { namespace util { namespace detail
             }
         }
 
-        static void call(boost::exception_ptr const& e,
-            std::list<boost::exception_ptr>& errors)
+        static void call(std::exception_ptr const& e,
+            std::list<std::exception_ptr>& errors)
         {
             try {
-                boost::rethrow_exception(e);
+                std::rethrow_exception(e);
             }
             catch (std::bad_alloc const& ba) {
                 boost::throw_exception(ba);
@@ -56,7 +57,7 @@ namespace hpx { namespace parallel { namespace util { namespace detail
 
         template <typename T>
         static void call(std::vector<hpx::future<T> > const& workitems,
-            std::list<boost::exception_ptr>& errors)
+            std::list<std::exception_ptr>& errors)
         {
             for (hpx::future<T> const& f: workitems)
             {
@@ -71,7 +72,7 @@ namespace hpx { namespace parallel { namespace util { namespace detail
         ///////////////////////////////////////////////////////////////////////
         template <typename T>
         static void call(std::vector<hpx::shared_future<T> > const& workitems,
-            std::list<boost::exception_ptr>& errors)
+            std::list<std::exception_ptr>& errors)
         {
             for (hpx::shared_future<T> const& f: workitems)
             {
@@ -85,17 +86,17 @@ namespace hpx { namespace parallel { namespace util { namespace detail
 
         template <typename T, typename Cleanup>
         static void call(std::vector<hpx::future<T> >& workitems,
-            std::list<boost::exception_ptr>& errors, Cleanup && cleanup)
+            std::list<std::exception_ptr>& errors, Cleanup && cleanup)
         {
             bool has_exception = false;
-            boost::exception_ptr bad_alloc_exception;
+            std::exception_ptr bad_alloc_exception;
             for (hpx::future<T>& f: workitems)
             {
                 if (f.has_exception())
                 {
-                    boost::exception_ptr e = f.get_exception_ptr();
+                    std::exception_ptr e = f.get_exception_ptr();
                     try {
-                        boost::rethrow_exception(e);
+                        std::rethrow_exception(e);
                     }
                     catch (std::bad_alloc const&) {
                         bad_alloc_exception = e;
@@ -120,7 +121,7 @@ namespace hpx { namespace parallel { namespace util { namespace detail
             }
 
             if (bad_alloc_exception)
-                boost::rethrow_exception(bad_alloc_exception);
+                std::rethrow_exception(bad_alloc_exception);
 
             if (!errors.empty())
                 boost::throw_exception(exception_list(std::move(errors)));
@@ -131,20 +132,20 @@ namespace hpx { namespace parallel { namespace util { namespace detail
     struct handle_local_exceptions<parallel_vector_execution_policy>
     {
         ///////////////////////////////////////////////////////////////////////
-        HPX_ATTRIBUTE_NORETURN static void call(boost::exception_ptr const&)
+        HPX_ATTRIBUTE_NORETURN static void call(std::exception_ptr const&)
         {
             hpx::terminate();
         }
 
         HPX_ATTRIBUTE_NORETURN static void call(
-            boost::exception_ptr const&, std::list<boost::exception_ptr>&)
+            std::exception_ptr const&, std::list<std::exception_ptr>&)
         {
             hpx::terminate();
         }
 
         template <typename T>
         static void call(std::vector<hpx::future<T> > const& workitems,
-            std::list<boost::exception_ptr>&)
+            std::list<std::exception_ptr>&)
         {
             for (hpx::future<T> const& f: workitems)
             {
@@ -155,7 +156,7 @@ namespace hpx { namespace parallel { namespace util { namespace detail
 
         template <typename T>
         static void call(std::vector<hpx::shared_future<T> > const& workitems,
-            std::list<boost::exception_ptr>&)
+            std::list<std::exception_ptr>&)
         {
             for (hpx::shared_future<T> const& f: workitems)
             {
@@ -166,7 +167,7 @@ namespace hpx { namespace parallel { namespace util { namespace detail
 
         template <typename T, typename Cleanup>
         static void call(std::vector<hpx::future<T> > const& workitems,
-            std::list<boost::exception_ptr>&, Cleanup &&)
+            std::list<std::exception_ptr>&, Cleanup &&)
         {
             for (hpx::future<T> const& f: workitems)
             {

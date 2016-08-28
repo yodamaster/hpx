@@ -16,6 +16,8 @@
 
 #include <hpx/runtime/threads_fwd.hpp>
 
+#include <boost/throw_exception.hpp>
+
 #include <cstddef>
 #include <map>
 #include <memory>

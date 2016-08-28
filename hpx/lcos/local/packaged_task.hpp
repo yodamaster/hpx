@@ -15,8 +15,7 @@
 #include <hpx/util/thread_description.hpp>
 #include <hpx/util/unique_function.hpp>
 
-#include <boost/exception_ptr.hpp>
-
+#include <exception>
 #include <type_traits>
 #include <utility>
 
@@ -122,7 +121,7 @@ namespace hpx { namespace lcos { namespace local
             {
                 promise_.set_value(function_(std::forward<Vs>(vs)...));
             } catch(...) {
-                promise_.set_exception(boost::current_exception());
+                promise_.set_exception(std::current_exception());
             }
         }
 
@@ -134,7 +133,7 @@ namespace hpx { namespace lcos { namespace local
                 function_(std::forward<Ts>(vs)...);
                 promise_.set_value();
             } catch(...) {
-                promise_.set_exception(boost::current_exception());
+                promise_.set_exception(std::current_exception());
             }
         }
 

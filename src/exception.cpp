@@ -30,12 +30,17 @@
 #endif
 
 #include <boost/atomic.hpp>
-#include <boost/exception_ptr.hpp>
+#include <boost/exception/enable_current_exception.hpp>
+#include <boost/exception/enable_error_info.hpp>
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/info.hpp>
 #include <boost/format.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -221,7 +226,7 @@ namespace hpx { namespace detail
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename Exception>
-    HPX_EXPORT boost::exception_ptr construct_exception(
+    HPX_EXPORT std::exception_ptr construct_exception(
         Exception const& e, std::string const& func,
         std::string const& file, long line, std::string const& back_trace,
         std::uint32_t node, std::string const& hostname, std::int64_t pid,
@@ -230,7 +235,7 @@ namespace hpx { namespace detail
         std::string const& config, std::string const& state_name,
         std::string const& auxinfo)
     {
-        // create a boost::exception_ptr object encapsulating the Exception to
+        // create a std::exception_ptr object encapsulating the Exception to
         // be thrown and annotate it with all the local information we have
         try {
             throw boost::enable_current_exception(
@@ -251,20 +256,20 @@ namespace hpx { namespace detail
                     << hpx::detail::throw_auxinfo(auxinfo));
         }
         catch (...) {
-            return boost::current_exception();
+            return std::current_exception();
         }
 
         // need this return to silence a warning with icc
         HPX_ASSERT(false);
-        return boost::exception_ptr();
+        return std::exception_ptr();
     }
 
     template <typename Exception>
-    HPX_EXPORT boost::exception_ptr construct_lightweight_exception(
+    HPX_EXPORT std::exception_ptr construct_lightweight_exception(
         Exception const& e, std::string const& func, std::string const& file,
         long line)
     {
-        // create a boost::exception_ptr object encapsulating the Exception to
+        // create a std::exception_ptr object encapsulating the Exception to
         // be thrown and annotate it with all the local information we have
         try {
             throw boost::enable_current_exception(
@@ -274,32 +279,32 @@ namespace hpx { namespace detail
                     << hpx::detail::throw_line(static_cast<int>(line)));
         }
         catch (...) {
-            return boost::current_exception();
+            return std::current_exception();
         }
 
         // need this return to silence a warning with icc
         HPX_ASSERT(false);
-        return boost::exception_ptr();
+        return std::exception_ptr();
     }
 
     template <typename Exception>
-    HPX_EXPORT boost::exception_ptr construct_lightweight_exception(Exception const& e)
+    HPX_EXPORT std::exception_ptr construct_lightweight_exception(Exception const& e)
     {
-        // create a boost::exception_ptr object encapsulating the Exception to
+        // create a std::exception_ptr object encapsulating the Exception to
         // be thrown and annotate it with all the local information we have
         try {
             boost::throw_exception(e);
         }
         catch (...) {
-            return boost::current_exception();
+            return std::current_exception();
         }
 
         // need this return to silence a warning with icc
         HPX_ASSERT(false);
-        return boost::exception_ptr();
+        return std::exception_ptr();
     }
 
-    template HPX_EXPORT boost::exception_ptr
+    template HPX_EXPORT std::exception_ptr
         construct_lightweight_exception(hpx::thread_interrupted const&);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -315,7 +320,7 @@ namespace hpx { namespace detail
     }
 
     template <typename Exception>
-    HPX_EXPORT boost::exception_ptr
+    HPX_EXPORT std::exception_ptr
     get_exception(Exception const& e, std::string const& func,
         std::string const& file, long line, std::string const& auxinfo)
     {
@@ -380,11 +385,11 @@ namespace hpx { namespace detail
         {
             util::attach_debugger();
         }
-        boost::rethrow_exception(get_exception(e, func, file, line));
+        std::rethrow_exception(get_exception(e, func, file, line));
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    template HPX_EXPORT boost::exception_ptr
+    template HPX_EXPORT std::exception_ptr
         get_exception(hpx::exception const&, std::string const&,
         std::string const&, long, std::string const&);
 
@@ -474,11 +479,11 @@ namespace hpx { namespace detail
             // of this locality. If it's not available, then just terminate.
             runtime* rt = get_runtime_ptr();
             if (nullptr != rt)  {
-                rt->report_error(boost::current_exception());
+                rt->report_error(std::current_exception());
             }
             else {
                 std::cerr << "Runtime is not available, reporting error locally. "
-                    << hpx::diagnostic_information(boost::current_exception())
+                    << hpx::diagnostic_information(std::current_exception())
                     << std::flush;
             }
         }
@@ -494,7 +499,7 @@ namespace hpx { namespace detail
 
     ///////////////////////////////////////////////////////////////////////////
     // report an early or late exception and abort
-    void report_exception_and_continue(boost::exception_ptr const& e)
+    void report_exception_and_continue(std::exception_ptr const& e)
     {
         if (!expect_exception_flag.load(boost::memory_order_relaxed) &&
             get_config_entry("hpx.attach_debugger", "") == "exception")
@@ -516,7 +521,7 @@ namespace hpx { namespace detail
         std::cerr << hpx::diagnostic_information(e) << std::endl;
     }
 
-    void report_exception_and_terminate(boost::exception_ptr const& e)
+    void report_exception_and_terminate(std::exception_ptr const& e)
     {
         report_exception_and_continue(e);
         std::abort();
@@ -529,7 +534,7 @@ namespace hpx { namespace detail
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    boost::exception_ptr access_exception(error_code const& e)
+    std::exception_ptr access_exception(error_code const& e)
     {
         return e.exception_;
     }
@@ -650,12 +655,12 @@ namespace hpx
         return strm.str();
     }
 
-    std::string diagnostic_information(boost::exception_ptr const& e)
+    std::string diagnostic_information(std::exception_ptr const& e)
     {
         if (!e) return std::string();
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return hpx::diagnostic_information(be);
@@ -685,12 +690,12 @@ namespace hpx
         return se ? se->what() : std::string("<unknown>");
     }
 
-    std::string get_error_what(boost::exception_ptr const& e)
+    std::string get_error_what(std::exception_ptr const& e)
     {
         if (!e) return std::string();
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return hpx::get_error_what(be);
@@ -726,13 +731,13 @@ namespace hpx
         return naming::invalid_locality_id;
     }
 
-    std::uint32_t get_error_locality_id(boost::exception_ptr const& e)
+    std::uint32_t get_error_locality_id(std::exception_ptr const& e)
     {
         if (!e)
             return naming::invalid_locality_id;
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_locality_id(be);
@@ -763,10 +768,10 @@ namespace hpx
         return static_cast<hpx::error>(e.value());
     }
 
-    error get_error(boost::exception_ptr const& e)
+    error get_error(std::exception_ptr const& e)
     {
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (hpx::thread_interrupted const&) {
             return hpx::thread_cancelled;
@@ -796,12 +801,12 @@ namespace hpx
         return std::string();
     }
 
-    std::string get_error_host_name(boost::exception_ptr const& e)
+    std::string get_error_host_name(std::exception_ptr const& e)
     {
         if (!e) return std::string();
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_host_name(be);
@@ -832,12 +837,12 @@ namespace hpx
         return -1;
     }
 
-    std::int64_t get_error_process_id(boost::exception_ptr const& e)
+    std::int64_t get_error_process_id(std::exception_ptr const& e)
     {
         if (!e) return -1;
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_process_id(be);
@@ -873,12 +878,12 @@ namespace hpx
         return std::string();
     }
 
-    std::string get_error_function_name(boost::exception_ptr const& e)
+    std::string get_error_function_name(std::exception_ptr const& e)
     {
         if (!e) return std::string();
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_function_name(be);
@@ -909,12 +914,12 @@ namespace hpx
         return std::string();
     }
 
-    std::string get_error_backtrace(boost::exception_ptr const& e)
+    std::string get_error_backtrace(std::exception_ptr const& e)
     {
         if (!e) return std::string();
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_backtrace(be);
@@ -946,12 +951,12 @@ namespace hpx
         return "<unknown>";
     }
 
-    std::string get_error_env(boost::exception_ptr const& e)
+    std::string get_error_env(std::exception_ptr const& e)
     {
         if (!e) return "<unknown>";
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_env(be);
@@ -988,12 +993,12 @@ namespace hpx
         return "<unknown>";
     }
 
-    std::string get_error_file_name(boost::exception_ptr const& e)
+    std::string get_error_file_name(std::exception_ptr const& e)
     {
         if (!e) return "<unknown>";
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_file_name(be);
@@ -1024,12 +1029,12 @@ namespace hpx
         return -1;
     }
 
-    int get_error_line_number(boost::exception_ptr const& e)
+    int get_error_line_number(std::exception_ptr const& e)
     {
         if (!e) return -1;
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_line_number(be);
@@ -1060,12 +1065,12 @@ namespace hpx
         return std::size_t(-1);
     }
 
-    std::size_t get_error_os_thread(boost::exception_ptr const& e)
+    std::size_t get_error_os_thread(std::exception_ptr const& e)
     {
         if (!e) return std::size_t(-1);
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_os_thread(be);
@@ -1096,12 +1101,12 @@ namespace hpx
         return 0;
     }
 
-    std::size_t get_error_thread_id(boost::exception_ptr const& e)
+    std::size_t get_error_thread_id(std::exception_ptr const& e)
     {
         if (!e) return std::size_t(-1);
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_thread_id(be);
@@ -1132,12 +1137,12 @@ namespace hpx
         return std::string();
     }
 
-    std::string get_error_thread_description(boost::exception_ptr const& e)
+    std::string get_error_thread_description(std::exception_ptr const& e)
     {
         if (!e) return std::string();
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_thread_description(be);
@@ -1168,12 +1173,12 @@ namespace hpx
         return std::string();
     }
 
-    std::string get_error_config(boost::exception_ptr const& e)
+    std::string get_error_config(std::exception_ptr const& e)
     {
         if (!e) return std::string();
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_config(be);
@@ -1204,12 +1209,12 @@ namespace hpx
         return std::string();
     }
 
-    std::string get_error_state(boost::exception_ptr const& e)
+    std::string get_error_state(std::exception_ptr const& e)
     {
         if (!e) return std::string();
 
         try {
-            boost::rethrow_exception(e);
+            std::rethrow_exception(e);
         }
         catch (boost::exception const& be) {
             return get_error_state(be);
@@ -1229,13 +1234,13 @@ namespace hpx
         return get_error_state(detail::access_exception(e));
     }
 
-    boost::exception_ptr get_exception_ptr(hpx::exception const& e)
+    std::exception_ptr get_exception_ptr(hpx::exception const& e)
     {
         try {
             throw e;
         }
         catch (...) {
-            return boost::current_exception();
+            return std::current_exception();
         }
     }
 

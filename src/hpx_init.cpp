@@ -29,7 +29,6 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
-#include <boost/exception_ptr.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -43,6 +42,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <exception>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -291,7 +291,7 @@ namespace hpx { namespace detail
             qc->start();
         }
         catch (...) {
-            std::cerr << hpx::diagnostic_information(boost::current_exception())
+            std::cerr << hpx::diagnostic_information(std::current_exception())
                 << std::flush;
             hpx::terminate();
         }

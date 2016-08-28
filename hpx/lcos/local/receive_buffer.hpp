@@ -14,9 +14,8 @@
 #include <hpx/throw_exception.hpp>
 #include <hpx/util/assert.hpp>
 
-#include <boost/exception_ptr.hpp>
-
 #include <cstddef>
+#include <exception>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -54,7 +53,7 @@ namespace hpx { namespace lcos { namespace local
                 promise_.set_value(std::forward<Val>(val));
             }
 
-            bool cancel(boost::exception_ptr const& e)
+            bool cancel(std::exception_ptr const& e)
             {
                 HPX_ASSERT(can_be_deleted_);
                 if (!value_set_)
@@ -197,7 +196,7 @@ namespace hpx { namespace lcos { namespace local
             return buffer_map_.empty();
         }
 
-        void cancel_waiting(boost::exception_ptr const& e)
+        void cancel_waiting(std::exception_ptr const& e)
         {
             std::lock_guard<mutex_type> l(mtx_);
 
@@ -266,7 +265,7 @@ namespace hpx { namespace lcos { namespace local
                 promise_.set_value();
             }
 
-            bool cancel(boost::exception_ptr const& e)
+            bool cancel(std::exception_ptr const& e)
             {
                 HPX_ASSERT(can_be_deleted_);
                 if (!value_set_)
@@ -409,7 +408,7 @@ namespace hpx { namespace lcos { namespace local
             return buffer_map_.empty();
         }
 
-        void cancel_waiting(boost::exception_ptr const& e)
+        void cancel_waiting(std::exception_ptr const& e)
         {
             std::lock_guard<mutex_type> l(mtx_);
 

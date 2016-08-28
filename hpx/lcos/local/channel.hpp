@@ -19,11 +19,11 @@
 #include <hpx/util/scoped_unlock.hpp>
 #include <hpx/util/unused.hpp>
 
-#include <boost/exception_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 
 #include <cstddef>
 #include <cstdlib>
+#include <exception>
 #include <iterator>
 #include <mutex>
 #include <utility>
@@ -188,7 +188,7 @@ namespace hpx { namespace lcos { namespace local
                 if (buffer_.empty())
                     return;
 
-                boost::exception_ptr e;
+                std::exception_ptr e;
 
                 {
                     util::scoped_unlock<std::unique_lock<mutex_type> > ul(l);

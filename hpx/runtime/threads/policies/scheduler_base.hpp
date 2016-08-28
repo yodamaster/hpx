@@ -25,7 +25,6 @@
 #endif
 
 #include <boost/chrono/chrono.hpp>
-#include <boost/exception_ptr.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
@@ -36,6 +35,7 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <utility>
@@ -291,7 +291,7 @@ namespace hpx { namespace threads { namespace policies
         virtual void on_start_thread(std::size_t num_thread) = 0;
         virtual void on_stop_thread(std::size_t num_thread) = 0;
         virtual void on_error(std::size_t num_thread,
-            boost::exception_ptr const& e) = 0;
+            std::exception_ptr const& e) = 0;
 
 #ifdef HPX_HAVE_THREAD_QUEUE_WAITTIME
         virtual std::int64_t get_average_thread_wait_time(

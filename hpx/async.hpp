@@ -57,7 +57,7 @@ namespace hpx { namespace detail
             return lcos::make_ready_future(std::ref(f()));
         } catch (...) {
             return lcos::make_exceptional_future<result_type>
-                (boost::current_exception());
+                (std::current_exception());
         }
     }
 
@@ -77,7 +77,7 @@ namespace hpx { namespace detail
             return lcos::make_ready_future(f());
         } catch (...) {
             return lcos::make_exceptional_future<result_type>
-                (boost::current_exception());
+                (std::current_exception());
         }
     }
 
@@ -90,7 +90,7 @@ namespace hpx { namespace detail
             f();
             return lcos::make_ready_future();
         } catch (...) {
-            return lcos::make_exceptional_future<void>(boost::current_exception());
+            return lcos::make_exceptional_future<void>(std::current_exception());
         }
     }
 

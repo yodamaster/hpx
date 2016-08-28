@@ -27,11 +27,11 @@
 
 #include <boost/atomic.hpp>
 #include <boost/detail/endian.hpp>
-#include <boost/exception_ptr.hpp>
 
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -452,7 +452,7 @@ namespace hpx { namespace parcelset
         {
             if (ec) {
                 // all errors during early parcel handling are fatal
-                boost::exception_ptr exception =
+                std::exception_ptr exception =
                     HPX_GET_EXCEPTION(ec,
                         "early_pending_parcel_handler",
                         "error while handling early parcel: " +

@@ -34,9 +34,9 @@
 #include <hpx/util/result_of.hpp>
 #include <hpx/util/unique_function.hpp>
 
-#include <boost/exception_ptr.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
+#include <exception>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -276,8 +276,8 @@ namespace hpx { namespace actions
         inline void trigger(Arg0 && arg0);
 
         //
-        virtual void trigger_error(boost::exception_ptr const& e);
-        virtual void trigger_error(boost::exception_ptr && e);
+        virtual void trigger_error(std::exception_ptr const& e);
+        virtual void trigger_error(std::exception_ptr && e);
 
         virtual char const* get_continuation_name() const = 0;
 
@@ -325,7 +325,7 @@ namespace hpx { namespace actions
             }
             catch (...) {
                 // make sure hpx::exceptions are propagated back to the client
-                cont->trigger_error(boost::current_exception());
+                cont->trigger_error(std::current_exception());
             }
         }
 
@@ -349,7 +349,7 @@ namespace hpx { namespace actions
             }
             catch (...) {
                 // make sure hpx::exceptions are propagated back to the client
-                cont->trigger_error(boost::current_exception());
+                cont->trigger_error(std::current_exception());
             }
         }
 
@@ -364,7 +364,7 @@ namespace hpx { namespace actions
             }
             catch (...) {
                 // make sure hpx::exceptions are propagated back to the client
-                cont->trigger_error(boost::current_exception());
+                cont->trigger_error(std::current_exception());
             }
         }
 
@@ -418,7 +418,7 @@ namespace hpx { namespace actions
             }
             catch (...) {
                 // make sure hpx::exceptions are propagated back to the client
-                cont->trigger_error(boost::current_exception());
+                cont->trigger_error(std::current_exception());
             }
         }
 

@@ -18,6 +18,8 @@
 #include <hpx/util/invoke.hpp>
 #include <hpx/util/unwrapped.hpp>
 
+#include <boost/throw_exception.hpp>
+
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
@@ -59,7 +61,7 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v3)
             }
             catch (...) {
                 boost::throw_exception(
-                    exception_list(boost::current_exception())
+                    exception_list(std::current_exception())
                 );
             }
         }
@@ -95,7 +97,7 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v3)
             }
             catch (...) {
                 boost::throw_exception(
-                    exception_list(boost::current_exception())
+                    exception_list(std::current_exception())
                 );
             }
 

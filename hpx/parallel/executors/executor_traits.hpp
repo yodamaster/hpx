@@ -21,12 +21,6 @@
 #include <hpx/util/invoke.hpp>
 #include <hpx/util/unwrapped.hpp>
 
-#include <functional>
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
-#include <vector>
-
 #include <boost/range/functions.hpp>
 #include <boost/range/irange.hpp>
 #include <boost/throw_exception.hpp>
@@ -36,6 +30,12 @@
 #else
 #include <boost/optional.hpp>
 #endif
+
+#include <functional>
+#include <stdexcept>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v3)
 {
@@ -207,7 +207,7 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v3)
                 }
                 catch (...) {
                     boost::throw_exception(
-                        exception_list(boost::current_exception())
+                        exception_list(std::current_exception())
                     );
                 }
             }
@@ -396,7 +396,7 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v3)
                 }
                 catch (...) {
                     boost::throw_exception(
-                        exception_list(boost::current_exception())
+                        exception_list(std::current_exception())
                     );
                 }
             }

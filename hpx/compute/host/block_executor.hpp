@@ -18,6 +18,7 @@
 
 #include <boost/atomic.hpp>
 #include <boost/range/iterator_range_core.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <cstddef>
 #include <iterator>
@@ -156,7 +157,7 @@ namespace hpx { namespace compute { namespace host
             }
             catch (...) {
                 boost::throw_exception(
-                    exception_list(boost::current_exception())
+                    exception_list(std::current_exception())
                 );
             }
         }
@@ -200,7 +201,7 @@ namespace hpx { namespace compute { namespace host
             }
             catch (...) {
                 boost::throw_exception(
-                    exception_list(boost::current_exception())
+                    exception_list(std::current_exception())
                 );
             }
         }

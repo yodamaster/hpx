@@ -16,6 +16,9 @@
 #include <hpx/runtime_fwd.hpp>
 #include <hpx/util/high_resolution_timer.hpp>
 
+#include <boost/exception/enable_error_info.hpp>
+#include <boost/throw_exception.hpp>
+
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -160,18 +163,18 @@ namespace hpx { namespace parcelset
                 LPT_(error)
                     << "decode_message: caught hpx::exception: "
                     << e.what();
-                hpx::report_error(boost::current_exception());
+                hpx::report_error(std::current_exception());
             }
             catch (boost::system::system_error const& e) {
                 LPT_(error)
                     << "decode_message: caught boost::system::error: "
                     << e.what();
-                hpx::report_error(boost::current_exception());
+                hpx::report_error(std::current_exception());
             }
             catch (boost::exception const&) {
                 LPT_(error)
                     << "decode_message: caught boost::exception.";
-                hpx::report_error(boost::current_exception());
+                hpx::report_error(std::current_exception());
             }
             catch (std::exception const& e) {
                 // We have to repackage all exceptions thrown by the
@@ -184,7 +187,7 @@ namespace hpx { namespace parcelset
         catch (...) {
             LPT_(error)
                 << "decode_message: caught unknown exception.";
-            hpx::report_error(boost::current_exception());
+            hpx::report_error(std::current_exception());
         }
     }
 

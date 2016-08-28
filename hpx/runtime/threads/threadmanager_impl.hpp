@@ -22,11 +22,11 @@
 #include <hpx/util/spinlock.hpp>
 
 #include <boost/atomic.hpp>
-#include <boost/exception_ptr.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <numeric>
@@ -207,7 +207,7 @@ namespace hpx { namespace threads
         }
 
         /// API functions forwarding to notification policy
-        void report_error(std::size_t num_thread, boost::exception_ptr const& e)
+        void report_error(std::size_t num_thread, std::exception_ptr const& e)
         {
             pool_.report_error(num_thread, e);
         }

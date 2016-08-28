@@ -33,9 +33,10 @@
 #include <hpx/util/steady_clock.hpp>
 #include <hpx/util/void_guard.hpp>
 
-#include <boost/exception_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
+#include <boost/throw_exception.hpp>
 
+#include <exception>
 #include <iterator>
 #include <type_traits>
 #include <utility>
@@ -70,7 +71,7 @@ namespace hpx { namespace lcos { namespace detail
 
             f = hpx::traits::future_access<Future>::create(std::move(p));
         } else if (state == future_state::has_exception) {
-            boost::exception_ptr exception;
+            std::exception_ptr exception;
             ar >> exception;
 
             boost::intrusive_ptr<shared_state> p(new shared_state());
@@ -100,7 +101,7 @@ namespace hpx { namespace lcos { namespace detail
 
             f = hpx::traits::future_access<Future>::create(std::move(p));
         } else if (state == future_state::has_exception) {
-            boost::exception_ptr exception;
+            std::exception_ptr exception;
             ar >> exception;
 
             boost::intrusive_ptr<shared_state> p(new shared_state());
@@ -170,7 +171,7 @@ namespace hpx { namespace lcos { namespace detail
             }
         } else if (f.has_exception()) {
             state = future_state::has_exception;
-            boost::exception_ptr exception = f.get_exception_ptr();
+            std::exception_ptr exception = f.get_exception_ptr();
             ar << state << exception;
         } else {
             state = future_state::invalid;
@@ -211,7 +212,7 @@ namespace hpx { namespace lcos { namespace detail
             state = future_state::has_value;
         } else if (f.has_exception()) {
             state = future_state::has_exception;
-            boost::exception_ptr exception = f.get_exception_ptr();
+            std::exception_ptr exception = f.get_exception_ptr();
             ar << state << exception;
         } else {
             state = future_state::invalid;
@@ -485,7 +486,7 @@ namespace hpx { namespace lcos { namespace detail
         //   - Blocks until the future is ready.
         // Returns: The stored exception_ptr if has_exception(), a null
         //          pointer otherwise.
-        boost::exception_ptr get_exception_ptr() const
+        std::exception_ptr get_exception_ptr() const
         {
             if (!shared_state_)
             {
@@ -496,7 +497,7 @@ namespace hpx { namespace lcos { namespace detail
 
             error_code ec(lightweight);
             this->shared_state_->get_result(ec);
-            if (!ec) return boost::exception_ptr();
+            if (!ec) return std::exception_ptr();
             return hpx::detail::access_exception(ec);
         }
 
@@ -1247,7 +1248,7 @@ namespace hpx { namespace lcos
     // extension: create a pre-initialized future object which holds the
     // given error
     template <typename T>
-    future<T> make_exceptional_future(boost::exception_ptr const& e)
+    future<T> make_exceptional_future(std::exception_ptr const& e)
     {
         typedef lcos::detail::future_data<T> shared_state;
 
@@ -1264,7 +1265,7 @@ namespace hpx { namespace lcos
         {
             boost::throw_exception(e);
         } catch (...) {
-            return lcos::make_exceptional_future<T>(boost::current_exception());
+            return lcos::make_exceptional_future<T>(std::current_exception());
         }
 
         return future<T>();

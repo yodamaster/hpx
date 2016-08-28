@@ -18,9 +18,9 @@
 #include <hpx/util/atomic_count.hpp>
 #include <hpx/util/unused.hpp>
 
-#include <boost/exception_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 
+#include <exception>
 #include <utility>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ namespace lcos {
                 shared_state_->set_data(std::move(result));
             }
 
-            void set_exception(boost::exception_ptr const& e)
+            void set_exception(std::exception_ptr const& e)
             {
                 HPX_ASSERT(shared_state_);
                 shared_state_->set_exception(e);

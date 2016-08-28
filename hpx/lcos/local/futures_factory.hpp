@@ -18,10 +18,10 @@
 #include <hpx/util/deferred_call.hpp>
 #include <hpx/util/thread_description.hpp>
 
-#include <boost/exception_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 
 #include <cstddef>
+#include <exception>
 #include <type_traits>
 #include <utility>
 
@@ -67,7 +67,7 @@ namespace hpx { namespace lcos { namespace local
                     this->set_value(f_());
                 }
                 catch(...) {
-                    this->set_exception(boost::current_exception());
+                    this->set_exception(std::current_exception());
                 }
             }
 
@@ -78,7 +78,7 @@ namespace hpx { namespace lcos { namespace local
                     this->set_value(result_type());
                 }
                 catch(...) {
-                    this->set_exception(boost::current_exception());
+                    this->set_exception(std::current_exception());
                 }
             }
 

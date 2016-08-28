@@ -37,7 +37,7 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v1)
                 }
                 catch (...) {
                     boost::throw_exception(
-                        hpx::exception_list(boost::current_exception())
+                        hpx::exception_list(std::current_exception())
                     );
                 }
             }
@@ -59,13 +59,13 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v1)
                     }
                     catch (...) {
                         boost::throw_exception(
-                            hpx::exception_list(boost::current_exception())
+                            hpx::exception_list(std::current_exception())
                         );
                     }
                 }
                 catch (...) {
                     return hpx::make_exceptional_future<Result>(
-                        boost::current_exception());
+                        std::current_exception());
                 }
             }
         };
@@ -94,13 +94,13 @@ namespace hpx { namespace parallel { HPX_INLINE_NAMESPACE(v1)
                     }
                     catch (...) {
                         boost::throw_exception(
-                            hpx::exception_list(boost::current_exception())
+                            hpx::exception_list(std::current_exception())
                         );
                     }
                 }
                 catch (...) {
                     return hpx::make_exceptional_future<Result>(
-                        boost::current_exception());
+                        std::current_exception());
                 }
             }
         };

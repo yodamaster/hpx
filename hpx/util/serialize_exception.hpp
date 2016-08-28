@@ -8,7 +8,7 @@
 
 #include <hpx/runtime/serialization/serialization_fwd.hpp>
 
-#include <boost/exception_ptr.hpp>
+#include <exception>
 
 namespace hpx { namespace util
 {
@@ -45,13 +45,13 @@ namespace hpx { namespace serialization
 {
     ///////////////////////////////////////////////////////////////////////////
     template <typename Archive>
-    void save(Archive& ar, boost::exception_ptr const& e, unsigned int);
+    void save(Archive& ar, std::exception_ptr const& e, unsigned int);
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename Archive>
-    void load(Archive& ar, boost::exception_ptr& e, unsigned int);
+    void load(Archive& ar, std::exception_ptr& e, unsigned int);
 
-    HPX_SERIALIZATION_SPLIT_FREE(boost::exception_ptr);
+    HPX_SERIALIZATION_SPLIT_FREE(std::exception_ptr);
 }}
 
 #endif

@@ -106,7 +106,7 @@ namespace hpx { namespace parcelset { namespace policies { namespace tcp
                         boost::asio::placeholders::error, receiver_conn));
             }
             catch (boost::system::system_error const&) {
-                errors.add(boost::current_exception());
+                errors.add(std::current_exception());
                 continue;
             }
         }

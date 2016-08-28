@@ -11,8 +11,7 @@
 #include <hpx/runtime/actions/continuation.hpp>
 #include <hpx/lcos/base_lco.hpp>
 
-#include <boost/exception_ptr.hpp>
-
+#include <exception>
 #include <utility>
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,7 +68,7 @@ namespace hpx
     }
 
     void set_lco_error(naming::id_type const& id, naming::address && addr,
-        boost::exception_ptr const& e, bool move_credits)
+        std::exception_ptr const& e, bool move_credits)
     {
         typedef lcos::base_lco::set_exception_action set_action;
         if (move_credits &&
@@ -89,7 +88,7 @@ namespace hpx
     }
 
     void set_lco_error(naming::id_type const& id, naming::address && addr, //-V659
-        boost::exception_ptr && e, bool move_credits)
+        std::exception_ptr && e, bool move_credits)
     {
         typedef lcos::base_lco::set_exception_action set_action;
         if (move_credits &&
@@ -111,7 +110,7 @@ namespace hpx
     }
 
     void set_lco_error(naming::id_type const& id, naming::address && addr,
-        boost::exception_ptr const& e, naming::id_type const& cont,
+        std::exception_ptr const& e, naming::id_type const& cont,
         bool move_credits)
     {
         typedef lcos::base_lco::set_exception_action set_action;
@@ -142,7 +141,7 @@ namespace hpx
     }
 
     void set_lco_error(naming::id_type const& id, naming::address && addr, //-V659
-        boost::exception_ptr && e, naming::id_type const& cont,
+        std::exception_ptr && e, naming::id_type const& cont,
         bool move_credits)
     {
         typedef lcos::base_lco::set_exception_action set_action;
@@ -205,7 +204,7 @@ namespace hpx { namespace actions
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    void continuation::trigger_error(boost::exception_ptr const& e)
+    void continuation::trigger_error(std::exception_ptr const& e)
     {
         if (!gid_) {
             HPX_THROW_EXCEPTION(invalid_status,
@@ -218,7 +217,7 @@ namespace hpx { namespace actions
         set_lco_error(gid_, this->get_addr(), e);
     }
 
-    void continuation::trigger_error(boost::exception_ptr && e) //-V659
+    void continuation::trigger_error(std::exception_ptr && e) //-V659
     {
         if (!gid_) {
             HPX_THROW_EXCEPTION(invalid_status,

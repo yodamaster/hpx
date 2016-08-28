@@ -18,8 +18,7 @@
 #include <hpx/util/bind.hpp>
 #include <hpx/util/static.hpp>
 
-#include <boost/exception_ptr.hpp>
-
+#include <exception>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -180,12 +179,12 @@ namespace hpx { namespace actions { namespace detail
             construct_semaphore_type::get_sem().signal();
         }
 
-        void trigger_error(boost::exception_ptr const& e)
+        void trigger_error(std::exception_ptr const& e)
         {
             if (cont_) cont_->trigger_error(e);
             construct_semaphore_type::get_sem().signal();
         }
-        void trigger_error(boost::exception_ptr && e)
+        void trigger_error(std::exception_ptr && e)
         {
             if (cont_) cont_->trigger_error(std::move(e));
             construct_semaphore_type::get_sem().signal();

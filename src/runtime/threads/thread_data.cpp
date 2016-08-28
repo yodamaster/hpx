@@ -16,10 +16,11 @@
 #include <hpx/util/register_locks.hpp>
 #include <hpx/util/unlock_guard.hpp>
 
-#include <boost/exception_ptr.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 
 // #if HPX_DEBUG
 // #  define HPX_DEBUG_THREAD_POOL 1

@@ -19,7 +19,6 @@
 #include <hpx/util_fwd.hpp>
 
 #include <boost/atomic.hpp>
-#include <boost/exception_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread/barrier.hpp>
 #include <boost/thread/mutex.hpp>
@@ -27,6 +26,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -152,7 +152,7 @@ namespace hpx { namespace threads { namespace detail
 
         void do_some_work(std::size_t num_thread);
 
-        void report_error(std::size_t num, boost::exception_ptr const& e);
+        void report_error(std::size_t num, std::exception_ptr const& e);
 
     protected:
         friend struct init_tss_helper<Scheduler>;

@@ -21,6 +21,8 @@
 #include <hpx/util/high_resolution_timer.hpp>
 #include <hpx/util/integer/endian.hpp>
 
+#include <boost/throw_exception.hpp>
+
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -209,7 +211,7 @@ namespace hpx
                         << "encode_parcels: "
                            "caught hpx::exception: "
                         << e.what();
-                    hpx::report_error(boost::current_exception());
+                    hpx::report_error(std::current_exception());
                     return 0;
                 }
                 catch (boost::system::system_error const& e) {
@@ -217,14 +219,14 @@ namespace hpx
                         << "encode_parcels: "
                            "caught boost::system::error: "
                         << e.what();
-                    hpx::report_error(boost::current_exception());
+                    hpx::report_error(std::current_exception());
                     return 0;
                 }
                 catch (boost::exception const&) {
                     LPT_(fatal)
                         << "encode_parcels: "
                            "caught boost::exception";
-                    hpx::report_error(boost::current_exception());
+                    hpx::report_error(std::current_exception());
                     return 0;
                 }
                 catch (std::exception const& e) {
@@ -240,7 +242,7 @@ namespace hpx
                 LPT_(fatal)
                         << "encode_parcels: "
                        "caught unknown exception";
-                hpx::report_error(boost::current_exception());
+                hpx::report_error(std::current_exception());
                     return 0;
             }
 

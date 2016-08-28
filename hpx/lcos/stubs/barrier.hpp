@@ -11,7 +11,7 @@
 #include <hpx/lcos/server/barrier.hpp>
 #include <hpx/runtime/components/stubs/stub_base.hpp>
 
-#include <boost/exception_ptr.hpp>
+#include <exception>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace lcos { namespace stubs
@@ -28,7 +28,7 @@ namespace hpx { namespace lcos { namespace stubs
 
         static lcos::future<void>
         set_exception_async(naming::id_type const& gid,
-            boost::exception_ptr const& e)
+            std::exception_ptr const& e)
         {
             typedef lcos::base_lco::set_exception_action action_type;
             return hpx::async<action_type>(gid, e);
@@ -40,7 +40,7 @@ namespace hpx { namespace lcos { namespace stubs
         }
 
         static void set_exception(naming::id_type const& gid,
-            boost::exception_ptr const& e)
+            std::exception_ptr const& e)
         {
             set_exception_async(gid, e).get();
         }

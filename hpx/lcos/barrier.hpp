@@ -10,7 +10,7 @@
 #include <hpx/lcos/stubs/barrier.hpp>
 #include <hpx/runtime/components/client_base.hpp>
 
-#include <boost/exception_ptr.hpp>
+#include <exception>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace hpx { namespace lcos
@@ -46,12 +46,12 @@ namespace hpx { namespace lcos
             this->lcos::stubs::barrier::wait(get_id());
         }
 
-        lcos::future<void> set_exception_async(boost::exception_ptr const& e)
+        lcos::future<void> set_exception_async(std::exception_ptr const& e)
         {
             return this->base_type::set_exception_async(get_id(), e);
         }
 
-        void set_exception(boost::exception_ptr const& e)
+        void set_exception(std::exception_ptr const& e)
         {
             this->base_type::set_exception(get_id(), e);
         }
