@@ -30,7 +30,6 @@
 #endif
 
 #include <boost/atomic.hpp>
-#include <boost/exception/enable_current_exception.hpp>
 #include <boost/exception/enable_error_info.hpp>
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/info.hpp>
@@ -238,8 +237,7 @@ namespace hpx { namespace detail
         // create a std::exception_ptr object encapsulating the Exception to
         // be thrown and annotate it with all the local information we have
         try {
-            throw boost::enable_current_exception(
-                boost::enable_error_info(e)
+            throw boost::enable_error_info(e)
                     << hpx::detail::throw_stacktrace(back_trace)
                     << hpx::detail::throw_locality(node)
                     << hpx::detail::throw_hostname(hostname)
@@ -253,7 +251,7 @@ namespace hpx { namespace detail
                     << hpx::detail::throw_env(env)
                     << hpx::detail::throw_config(config)
                     << hpx::detail::throw_state(state_name)
-                    << hpx::detail::throw_auxinfo(auxinfo));
+                    << hpx::detail::throw_auxinfo(auxinfo);
         }
         catch (...) {
             return std::current_exception();
@@ -272,11 +270,10 @@ namespace hpx { namespace detail
         // create a std::exception_ptr object encapsulating the Exception to
         // be thrown and annotate it with all the local information we have
         try {
-            throw boost::enable_current_exception(
-                boost::enable_error_info(e)
+            throw boost::enable_error_info(e)
                     << hpx::detail::throw_function(func)
                     << hpx::detail::throw_file(file)
-                    << hpx::detail::throw_line(static_cast<int>(line)));
+                    << hpx::detail::throw_line(static_cast<int>(line));
         }
         catch (...) {
             return std::current_exception();
