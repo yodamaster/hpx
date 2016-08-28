@@ -61,6 +61,10 @@ namespace boost
       { "(\\bboost\\s*::\\s*reference_wrapper\\b)", "std::reference_wrapper" },
       { "(\\bboost\\s*::\\s*(c?ref)\\b)", "std::\\2" },
       { "(\\bboost\\s*::\\s*(u?int[0-9]+_t)\\b)", "std::\\2" },
+      { "(\\bboost\\s*::\\s*exception_ptr\\b)", "std::exception_ptr" },
+      { "(\\bboost\\s*::\\s*make_exception_ptr\\b)", "std::make_exception_ptr" },
+      { "(\\bboost\\s*::\\s*rethrow_exception\\b)", "std::rethrow_exception" },
+      { "(\\bboost\\s*::\\s*current_exception\\b)", "std::current_exception" },
       { "(\\bNULL\\b)", "nullptr" },
       { nullptr, nullptr }
     };
