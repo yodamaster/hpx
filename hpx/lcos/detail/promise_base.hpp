@@ -22,6 +22,7 @@
 
 #include <boost/intrusive_ptr.hpp>
 
+#include <exception>
 #include <memory>
 #include <utility>
 

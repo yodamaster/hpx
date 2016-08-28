@@ -21,6 +21,7 @@
 
 #include <boost/intrusive_ptr.hpp>
 
+#include <exception>
 #include <functional>
 #include <mutex>
 #include <utility>

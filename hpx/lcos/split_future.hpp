@@ -65,6 +65,7 @@ namespace hpx
 
 #include <array>
 #include <cstddef>
+#include <exception>
 #include <type_traits>
 #include <utility>
 

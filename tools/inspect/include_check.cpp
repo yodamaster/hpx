@@ -42,6 +42,10 @@ namespace boost
       { "(\\bstd\\s*::\\s*((i|o)?stringstream)\\b)", "std::\\2", "sstream" },
       { "(\\bstd\\s*::\\s*((i|o)?fstream)\\b)", "std::\\2", "fstream" },
       { "(\\bstd\\s*::\\s*(cin|cout|cerr|clog)\\b)", "std::\\2", "iostream" },
+      { "(\\bstd\\s*::\\s*exception_ptr\\b)", "std::exception_ptr", "exception" },
+      { "(\\bstd\\s*::\\s*make_exception_ptr\\b)", "std::make_exception_ptr", "exception" },
+      { "(\\bstd\\s*::\\s*rethrow_exception\\b)", "std::rethrow_exception", "exception" },
+      { "(\\bstd\\s*::\\s*current_exception\\b)", "std::current_exception", "exception" },
       // cstddef
       { "(\\bstd\\s*::\\s*size_t\\b)", "std::size_t", "cstddef" },
       { "(\\bstd\\s*::\\s*ptrdiff_t\\b)", "std::ptrdiff_t", "cstddef" },

@@ -11,6 +11,7 @@
 #include <hpx/lcos/future.hpp>
 #include <hpx/util/lightweight_test.hpp>
 
+#include <exception>
 #include <utility>
 
 int main()

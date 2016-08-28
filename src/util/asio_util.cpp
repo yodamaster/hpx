@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <ctime>
+#include <exception>
 #include <sstream>
 #include <string>
 

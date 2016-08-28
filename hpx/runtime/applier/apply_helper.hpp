@@ -17,6 +17,7 @@
 #include <hpx/traits/action_stacksize.hpp>
 #include <hpx/util/decay.hpp>
 
+#include <exception>
 #include <memory>
 #include <utility>
 

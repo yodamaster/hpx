@@ -19,6 +19,7 @@
 #include <hpx/util/deferred_call.hpp>
 #include <hpx/util/lazy_enable_if.hpp>
 
+#include <exception>
 #include <functional>
 #include <type_traits>
 #include <utility>

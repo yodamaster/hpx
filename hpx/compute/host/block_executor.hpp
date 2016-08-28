@@ -21,6 +21,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <cstddef>
+#include <exception>
 #include <iterator>
 #include <utility>
 #include <vector>

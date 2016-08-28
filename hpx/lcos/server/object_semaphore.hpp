@@ -20,6 +20,7 @@
 #include <boost/intrusive/slist.hpp>
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <utility>
