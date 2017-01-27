@@ -60,7 +60,7 @@ namespace hpx { namespace parcelset
         typedef policies::mpi::sender_connection connection_type;
         typedef std::true_type  send_early_parcel;
         typedef std::true_type  do_background_work;
-        typedef std::false_type send_immediate_parcels;
+        typedef std::true_type send_immediate_parcels;
 
         static const char * type()
         {
@@ -191,6 +191,10 @@ namespace hpx { namespace parcelset
                 has_work = sender_.background_work();
                 has_work = receiver_.background_work() || has_work;
                 return has_work;
+            }
+
+            bool can_send_immediate() {
+                return true;
             }
 
         private:
