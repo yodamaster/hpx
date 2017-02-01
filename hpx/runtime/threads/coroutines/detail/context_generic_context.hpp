@@ -1,5 +1,5 @@
 //  Copyright (c) 2014 Thomas Heller
-//  Copyright (c) 2012 Hartmut Kaiser
+//  Copyright (c) 2012-2017 Hartmut Kaiser
 //  Copyright (c) 2009 Oliver Kowalke
 //
 //  Distributed under the Boost Software License, Version 1.0.
@@ -24,6 +24,8 @@
 
 #if defined(_POSIX_VERSION)
 #include <hpx/runtime/threads/coroutines/detail/posix_utility.hpp>
+#else
+#include <boost/throw_exception.hpp>
 #endif
 
 #include <boost/version.hpp>
@@ -101,7 +103,6 @@ namespace hpx { namespace threads { namespace coroutines
 #else
                 void* limit = std::calloc(size, sizeof(char));
                 if (!limit) boost::throw_exception(std::bad_alloc());
-
 #endif
                 return static_cast<char*>(limit) + size;
             }
@@ -132,7 +133,13 @@ namespace hpx { namespace threads { namespace coroutines
             { return minimum_stacksize(); }
 
             static std::size_t minimum_stacksize()
-            { return SIGSTKSZ + sizeof(boost::context::fcontext_t) + 15; }
+            {
+#if BOOST_VERSION < 106100
+                return SIGSTKSZ + sizeof(boost::context::fcontext_t) + 15;
+#else
+                return SIGSTKSZ + sizeof(boost::context::detail::fcontext_t) + 15;
+#endif
+            }
 
             void* allocate(std::size_t size) const
             {
@@ -156,20 +163,52 @@ namespace hpx { namespace threads { namespace coroutines
         };
 #endif
 
-        // Generic implementation for the context_impl_base class based on
-        // Boost.Context.
-        template <typename T>
-        HPX_FORCEINLINE void trampoline(intptr_t pv)
-        {
-            T* fun = reinterpret_cast<T*>(pv);
-            HPX_ASSERT(fun);
-            (*fun)();
-            std::abort();
-        }
-
         class fcontext_context_impl
         {
+            // Generic implementation for the context_impl_base class based on
+            // Boost.Context.
+#if BOOST_VERSION < 106100
+            template <typename T>
+            static HPX_FORCEINLINE
+            void trampoline(intptr_t pv)
+            {
+                T* fun = reinterpret_cast<T*>(pv);
+                HPX_ASSERT(fun);
+                (*fun)();
+                std::abort();
+            }
+#else
+            struct pair_of_contexts
+            {
+                fcontext_context_impl* from;
+                fcontext_context_impl const* to;
+            };
+
+            template <typename T>
+            static HPX_FORCEINLINE
+            void trampoline(boost::context::detail::transfer_t pv)
+            {
+                pair_of_contexts* p = reinterpret_cast<pair_of_contexts*>(pv.data);
+                HPX_ASSERT(p != nullptr);
+
+                T* fun = reinterpret_cast<T*>(p->to->cb_);
+                HPX_ASSERT(fun);
+
+                if (p->from->ctx_ == nullptr)
+                    p->from->ctx_ = pv.fctx;
+
+                (*fun)();
+                std::abort();
+            }
+#endif
+
             HPX_NON_COPYABLE(fcontext_context_impl);
+
+#if BOOST_VERSION < 106100
+            typedef intptr_t fiber_data;
+#else
+            typedef void* fiber_data;
+#endif
 
         public:
             typedef fcontext_context_impl context_impl_base;
@@ -189,7 +228,7 @@ namespace hpx { namespace threads { namespace coroutines
             // a new stack. The stack size can be optionally specified.
             template <typename Functor>
             fcontext_context_impl(Functor& cb, std::ptrdiff_t stack_size)
-              : cb_(reinterpret_cast<intptr_t>(&cb))
+              : cb_(reinterpret_cast<fiber_data>(&cb))
               , funp_(&trampoline<Functor>)
 #if BOOST_VERSION > 105500
               , ctx_(0)
@@ -206,9 +245,12 @@ namespace hpx { namespace threads { namespace coroutines
                     boost::context::make_fcontext(stack_pointer_, stack_size_, funp_);
 
                 std::swap(*ctx, ctx_);
+#elif BOOST_VERSION < 106100
+                ctx_ = boost::context::make_fcontext(stack_pointer_,
+                    stack_size_, funp_);
 #else
-                ctx_ =
-                    boost::context::make_fcontext(stack_pointer_, stack_size_, funp_);
+                ctx_ = boost::context::detail::make_fcontext(stack_pointer_,
+                    stack_size_, funp_);
 #endif
             }
 
@@ -267,7 +309,7 @@ namespace hpx { namespace threads { namespace coroutines
 
         private:
             friend void swap_context(fcontext_context_impl& from,
-                fcontext_context_impl const& to, detail::default_hint)
+                fcontext_context_impl& to, detail::default_hint)
             {
 #if defined(HPX_GENERIC_CONTEXT_USE_SEGMENTED_STACKS)
                 __splitstack_getcontext(from.alloc_.segments_ctx_);
@@ -275,9 +317,17 @@ namespace hpx { namespace threads { namespace coroutines
 #endif
                 // switch to other coroutine context
 #if BOOST_VERSION < 105600
-                boost::context::jump_fcontext(&from.ctx_, &to.ctx_, to.cb_, false);
+                boost::context::jump_fcontext(&from.ctx_, &to.ctx_, to.cb_, true);
+#elif BOOST_VERSION < 106100
+                boost::context::jump_fcontext(&from.ctx_, to.ctx_, to.cb_, true);
 #else
-                boost::context::jump_fcontext(&from.ctx_, to.ctx_, to.cb_, false);
+                pair_of_contexts p{&from, &to};
+                boost::context::detail::transfer_t transfer =
+                    boost::context::detail::jump_fcontext(to.ctx_, &p);
+                to.ctx_ = transfer.fctx;    // update 'return' address (entry point)
+
+                HPX_ASSERT(((pair_of_contexts*)transfer.data)->from == &to);
+                HPX_ASSERT(((pair_of_contexts*)transfer.data)->to == &from);
 #endif
 
 #if defined(HPX_GENERIC_CONTEXT_USE_SEGMENTED_STACKS)
@@ -286,9 +336,14 @@ namespace hpx { namespace threads { namespace coroutines
             }
 
         private:
-            intptr_t cb_;
+            fiber_data cb_;
+#if BOOST_VERSION < 106100
             void (*funp_)(intptr_t);
             boost::context::fcontext_t ctx_;
+#else
+            void (*funp_)(boost::context::detail::transfer_t);
+            boost::context::detail::fcontext_t ctx_;
+#endif
             stack_allocator alloc_;
             std::size_t stack_size_;
             void * stack_pointer_;

@@ -585,6 +585,7 @@ namespace hpx { namespace threads { namespace coroutines { namespace detail
         // Nothrow.
         void do_yield() HPX_NOEXCEPT
         {
+            HPX_ASSERT(!running());
             swap_context(*this, m_caller, detail::yield_hint());
         }
 

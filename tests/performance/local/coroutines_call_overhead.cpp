@@ -140,7 +140,7 @@ struct kernel
     {
         worker_timed(payload * 1000);
 
-        return hpx::threads::thread_result_type(hpx::threads::pending, nullptr);
+        return hpx::threads::thread_result_type(hpx::threads::terminated, nullptr);
     }
 
     bool operator!() const { return true; }
@@ -174,6 +174,7 @@ double perform_2n_iterations()
     for (std::uint64_t i = 0; i < iterations; ++i)
     {
         (*coroutines[indices[i]])(wait_signaled);
+        coroutines[indices[i]]->rebind(k);
     }
 
     hpx::util::high_resolution_timer t;
